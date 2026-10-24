@@ -12,15 +12,16 @@ import type { Brand, Job, LandingContent, LiveStats, Mark } from "@/lib/types";
  *     which drops the cached copy, so the next visitor sees the change.
  *   - If that call is missed, the copy refreshes on its own every five minutes.
  *
- * If the API cannot be reached the page still renders: the hero numbers keep
- * their last known defaults, the buttons point at the app's own pages, and the
- * jobs, cards and logos sections show their empty states.
+ * If the API cannot be reached the page still renders: the hero numbers are
+ * hidden (zero), the buttons point at the app's own pages, and the jobs, cards
+ * and logos sections show their empty states.
  */
 
 export const LANDING_CACHE_TAG = "landing";
 
 const EMPTY: LandingContent = {
-  counters: { verifiedCandidates: 12400, partnerProperties: 380, cities: 24, availableNow: 1284 },
+  // Zero hides each number (see the hero): nothing unapproved is shown when the API is down.
+  counters: { verifiedCandidates: 0, partnerProperties: 0, cities: 0, availableNow: 0 },
   links: FALLBACK_LINKS,
   trustedLogos: [],
   propertyCards: [],

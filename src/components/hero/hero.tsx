@@ -52,6 +52,8 @@ export function Hero({ image, stats, links }: { image: HeroImage; stats: LiveSta
     preload(image.mobileSrc, { as: "image", imageSrcSet: mobileSet, imageSizes: "100vw", fetchPriority: "high", media: PORTRAIT });
   }
 
+  const counters = [stats.verifiedCandidates, stats.partnerProperties, stats.cities].filter((n) => n > 0);
+
   const vars = {
     "--fp-d": image.focalPoint.desktop,
     "--fp-m": image.focalPoint.mobile,
@@ -107,16 +109,19 @@ export function Hero({ image, stats, links }: { image: HeroImage; stats: LiveSta
           className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col justify-between gap-10 px-[var(--gutter)] pt-[calc(108px+env(safe-area-inset-top))] pb-[calc(100px+env(safe-area-inset-bottom))] lg:justify-end lg:pt-[140px] lg:pb-8"
         >
           <div className="flex flex-col items-start">
-            <p
-              data-hero-fade
-              className="hero-fade glass mb-6 inline-flex min-h-9 items-center gap-2.5 rounded-full py-1.5 pr-4 pl-3 text-[14px] text-ivory lg:mb-8"
-            >
-              <span className="pulse-dot" aria-hidden />
-              <span>
-                <CountUp value={stats.availableNow} delay={0.6} start="top bottom" defer={false} className="font-mono font-medium" /> verified
-                candidates available now
-              </span>
-            </p>
+            {/* An admin leaves a number at 0 to hide it (until real figures are approved). */}
+            {stats.availableNow > 0 && (
+              <p
+                data-hero-fade
+                className="hero-fade glass mb-6 inline-flex min-h-9 items-center gap-2.5 rounded-full py-1.5 pr-4 pl-3 text-[14px] text-ivory lg:mb-8"
+              >
+                <span className="pulse-dot" aria-hidden />
+                <span>
+                  <CountUp value={stats.availableNow} delay={0.6} start="top bottom" defer={false} className="font-mono font-medium" /> verified
+                  candidates available now
+                </span>
+              </p>
+            )}
 
             <h1 id="hero-title" className="hero-rise display max-w-[14ch] text-[clamp(44px,9vw,104px)] lg:max-w-[21ch]">
               <HeadlineRotator
@@ -169,20 +174,24 @@ export function Hero({ image, stats, links }: { image: HeroImage; stats: LiveSta
               <span aria-hidden className="inline-block size-1.5 rounded-full bg-champagne" />
               {image.caption}
             </p>
-            <dl className="order-1 grid grid-cols-3 gap-3 lg:order-2 lg:flex lg:gap-14">
-              {[
-                { label: "Verified candidates", value: stats.verifiedCandidates, suffix: "+" },
-                { label: "Partner properties", value: stats.partnerProperties },
-                { label: "Cities", value: stats.cities },
-              ].map((s) => (
-                <div key={s.label} className="flex flex-col-reverse gap-1">
-                  <dt className="text-[12px] leading-tight text-on-dark-faint sm:text-[12px]">{s.label}</dt>
-                  <dd className="font-mono text-[clamp(20px,2vw,28px)] font-medium tracking-tight text-ivory">
-                    <CountUp value={s.value} suffix={s.suffix} delay={1.2} start="top bottom" defer={false} />
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            {counters.length > 0 && (
+              <dl className="order-1 grid grid-cols-3 gap-3 lg:order-2 lg:flex lg:gap-14">
+                {[
+                  { label: "Verified candidates", value: stats.verifiedCandidates, suffix: "+" },
+                  { label: "Partner properties", value: stats.partnerProperties },
+                  { label: "Cities", value: stats.cities },
+                ]
+                  .filter((s) => s.value > 0)
+                  .map((s) => (
+                  <div key={s.label} className="flex flex-col-reverse gap-1">
+                    <dt className="text-[12px] leading-tight text-on-dark-faint sm:text-[12px]">{s.label}</dt>
+                    <dd className="font-mono text-[clamp(20px,2vw,28px)] font-medium tracking-tight text-ivory">
+                      <CountUp value={s.value} suffix={s.suffix} delay={1.2} start="top bottom" defer={false} />
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
         </div>
 
