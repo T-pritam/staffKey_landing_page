@@ -1,9 +1,9 @@
-import type { Brand } from "@/lib/types";
+import type { Mark } from "@/lib/types";
 
 /**
- * Fictional brands have no logo files, so each gets a typographic wordmark.
- * The style is picked from the brand's position, so a real logo (`logoSrc`)
- * can replace it later without touching the layout.
+ * A brand without a logo file gets a typographic wordmark, styled by its
+ * position. An admin-uploaded logo (`logoSrc`, a transparent PNG or WebP)
+ * replaces it at the same size, so the layout never changes.
  */
 const STYLES = [
   "font-display italic tracking-[-0.02em]",
@@ -16,10 +16,10 @@ const STYLES = [
   "font-display uppercase tracking-[0.04em] text-[0.82em]",
 ] as const;
 
-export function Wordmark({ brand, index, className }: { brand: Brand; index: number; className?: string }) {
+export function Wordmark({ brand, index, className }: { brand: Mark; index: number; className?: string }) {
   if (brand.logoSrc) {
-    // eslint-disable-next-line @next/next/no-img-element -- partner logos are small SVGs; no optimisation needed
-    return <img src={brand.logoSrc} alt={brand.name} className={`h-[1em] w-auto ${className ?? ""}`} />;
+    // eslint-disable-next-line @next/next/no-img-element -- small admin-uploaded logos, already sized; no optimisation needed
+    return <img src={brand.logoSrc} alt={brand.name} loading="lazy" decoding="async" className={`h-[1em] w-auto max-w-[6em] object-contain ${className ?? ""}`} />;
   }
   const style = STYLES[index % STYLES.length];
   const amp = brand.name.split(/(&)/);

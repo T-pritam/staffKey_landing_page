@@ -4,32 +4,45 @@ import { useRef } from "react";
 
 import { Logo } from "@/components/logo/logo";
 import { LOGO_SILHOUETTE, LOGO_VIEWBOX } from "@/components/logo/paths";
-import { gsap, MQ, onIdle, useGSAP } from "@/lib/motion";
+import { DUR, gsap, MQ, onIdle, useGSAP } from "@/lib/motion";
 
 /**
- * The oversized footer wordmark: an outline, with a solid copy on top that is
- * wiped in from the left as the footer scrolls into view.
+ * The oversized footer wordmark: an outline, with a solid copy on top that
+ * sweeps in from the left once the wordmark is mostly in view.
+ *
+ * Timed, not scroll-scrubbed: the footer sits at the very end of the page, so
+ * a scrub only completes on the last pixel of scroll and most visitors would
+ * see a half-filled logo.
  */
 export function FooterWordmark() {
   const ref = useRef<HTMLDivElement>(null);
 
   useGSAP(
     (_, contextSafe) => {
-      const fill = ref.current?.querySelector("[data-fill]");
-      if (!fill || !contextSafe) return;
+      const el = ref.current;
+      const fill = el?.querySelector("[data-fill]");
+      if (!el || !fill || !contextSafe) return;
       return onIdle(
         contextSafe(() => {
           const mm = gsap.matchMedia();
           mm.add(MQ.motion, () => {
-            gsap.fromTo(
+            const sweep = gsap.fromTo(
               fill,
               { clipPath: "inset(0% 100% 0% 0%)" },
-              {
-                clipPath: "inset(0% 0% 0% 0%)",
-                ease: "none",
-                scrollTrigger: { trigger: ref.current, start: "top bottom", end: "bottom bottom", scrub: 0.6 },
-              },
+              { clipPath: "inset(0% 0% 0% 0%)", duration: DUR.slow * 1.5, ease: "power2.inOut", paused: true },
             );
+            // An observer, not a ScrollTrigger: the footer skips layout until it's near
+            // (content-visibility), so positions measured at load are wrong.
+            const io = new IntersectionObserver(
+              ([entry]) => {
+                if (!entry.isIntersecting) return;
+                sweep.play();
+                io.disconnect();
+              },
+              { threshold: 0.6 },
+            );
+            io.observe(el);
+            return () => io.disconnect();
           });
         }),
       );

@@ -1,9 +1,69 @@
-import { BriefcaseBusiness, Building2, ChefHat, Flower2, Landmark, TreePalm, UtensilsCrossed, Wine, type LucideIcon } from "lucide-react";
+import {
+  BedDouble,
+  Beer,
+  BriefcaseBusiness,
+  Building,
+  Building2,
+  CalendarDays,
+  ChefHat,
+  Coffee,
+  CookingPot,
+  Crown,
+  Flower2,
+  Gem,
+  GraduationCap,
+  HeartHandshake,
+  Hospital,
+  Landmark,
+  Martini,
+  PartyPopper,
+  Plane,
+  Presentation,
+  Sandwich,
+  Ship,
+  Soup,
+  TreePalm,
+  UtensilsCrossed,
+  Wine,
+  type LucideIcon,
+} from "lucide-react";
 
 import { CountUp } from "@/components/ui/count-up";
 import type { Brand } from "@/lib/types";
 
 import { Wordmark } from "./wordmark";
+
+/**
+ * An icon for each of the app's property types (EmployerType slugs). A
+ * placeholder set until the agreed name/icon mapping arrives; a slug not
+ * listed falls back to the name patterns below, then to a building.
+ */
+const ICON_BY_SLUG: Record<string, LucideIcon> = {
+  hotel: Building2,
+  resort: TreePalm,
+  restaurant: UtensilsCrossed,
+  qsr: Sandwich,
+  caf: Coffee,
+  "cloud-kitchen": ChefHat,
+  "banquet-venue": PartyPopper,
+  "convention-centre": Presentation,
+  caterer: CookingPot,
+  "wedding-caterer": Gem,
+  "event-company": CalendarDays,
+  club: Martini,
+  pub: Beer,
+  bar: Wine,
+  "institutional-catering": Soup,
+  "corporate-cafeteria": BriefcaseBusiness,
+  hospital: Hospital,
+  university: GraduationCap,
+  "airport-hospitality": Plane,
+  "cruise-operator": Ship,
+  "serviced-apartments": Building,
+  hostel: BedDouble,
+  "senior-living": HeartHandshake,
+  "luxury-residence": Crown,
+};
 
 const ICONS: [RegExp, LucideIcon][] = [
   [/heritage/i, Landmark],
@@ -15,8 +75,8 @@ const ICONS: [RegExp, LucideIcon][] = [
   [/restaurant/i, UtensilsCrossed],
 ];
 
-function PropertyIcon({ type }: { type: string }) {
-  const Icon = ICONS.find(([re]) => re.test(type))?.[1] ?? Building2;
+function PropertyIcon({ type, slug }: { type: string; slug: string | null }) {
+  const Icon = (slug ? ICON_BY_SLUG[slug] : undefined) ?? ICONS.find(([re]) => re.test(type))?.[1] ?? Building2;
   return <Icon className="size-5" aria-hidden strokeWidth={1.5} />;
 }
 
@@ -115,10 +175,10 @@ export function BrandCard({ brand, index, featured }: { brand: Brand; index: num
 
       <header className="flex items-center justify-between gap-4">
         <span className={`inline-flex size-11 items-center justify-center rounded-full ${dark ? "bg-white/10" : "bg-ink/[0.07]"}`}>
-          <PropertyIcon type={brand.propertyType} />
+          <PropertyIcon type={brand.propertyType} slug={brand.propertyTypeSlug} />
         </span>
         <p className={`eyebrow text-right !text-[12px] ${dark ? "text-on-dark-muted" : "text-on-light-muted"}`}>
-          {brand.propertyType} · {brand.city}
+          {[brand.propertyType, brand.city].filter(Boolean).join(" · ")}
         </p>
       </header>
 

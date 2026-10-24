@@ -27,8 +27,10 @@ export function formatExperience({ minMonths, maxMonths }: Job["experience"]) {
   return `${min}–${years(maxMonths)} yrs`;
 }
 
-export const EMPLOYMENT_LABEL: Record<NonNullable<Job["employmentType"]>, string> = {
+export const EMPLOYMENT_LABEL: Record<Job["employmentType"], string> = {
   FULL_TIME: "Full-time",
+  PART_TIME: "Part-time",
   CONTRACT: "Contract",
   SEASONAL: "Seasonal",
+  APPRENTICESHIP: "Apprenticeship",
 };

@@ -3,17 +3,18 @@
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 
+import { CandidateLink } from "@/components/links/candidate-link";
 import { Logo } from "@/components/logo/logo";
-import { LINKS } from "@/lib/links";
+import { SECTIONS, STATIC_LINKS } from "@/lib/links";
+import type { LandingLinks } from "@/lib/types";
 import { DUR, EASE, getLenis, gsap, MQ, onIdle, ScrollTrigger, scrollToTarget, STAGGER, useGSAP } from "@/lib/motion";
 
 const NAV = [
-  { label: "Brands", href: "#brands" },
-  { label: "Jobs", href: "#live-jobs" },
-  { label: "For employers", href: "#for-employers" },
+  { label: "Jobs", href: SECTIONS.jobs },
+  { label: "Brands", href: SECTIONS.brands },
 ] as const;
 
-export function SiteHeader() {
+export function SiteHeader({ links }: { links: LandingLinks }) {
   const root = useRef<HTMLElement>(null);
   const bar = useRef<HTMLDivElement>(null);
   const pill = useRef<HTMLDivElement>(null);
@@ -153,36 +154,48 @@ export function SiteHeader() {
         <div
           ref={pill}
           data-scrolled="false"
-          className="group/pill glass relative z-[2] mx-auto flex h-[60px] max-w-[1040px] items-center justify-between gap-4 rounded-full pr-2 pl-5 shadow-[0_10px_40px_-20px_rgb(0_0_0/0.8)] transition-[transform,background-color,border-color] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] data-[scrolled=true]:scale-[0.965] data-[scrolled=true]:border-[rgb(244_239_231/0.18)] data-[scrolled=true]:bg-[rgb(10_11_15/0.72)]"
+          className="group/bar relative z-[2] mx-auto flex max-w-[1240px] items-center justify-between gap-3"
         >
-          <a href="#top" onClick={(e) => onAnchor(e, "#top")} className="flex min-h-11 items-center" aria-label="Staffkey, back to top">
-            <Logo tone="white" title={null} className="h-[22px] w-auto" />
+          {/* The logo sits outside the capsule, larger; it gains its own glass once the page scrolls onto light sections. */}
+          <a
+            href={SECTIONS.top}
+            onClick={(e) => onAnchor(e, SECTIONS.top)}
+            className="flex min-h-[60px] items-center rounded-full px-1 transition-[background-color,padding,transform] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] group-data-[scrolled=true]/bar:glass group-data-[scrolled=true]/bar:scale-[0.94] group-data-[scrolled=true]/bar:bg-[rgb(10_11_15/0.72)] group-data-[scrolled=true]/bar:px-5"
+            aria-label="Staffkey, back to top"
+          >
+            <Logo tone="white" title={null} className="h-[28px] w-auto sm:h-[32px]" />
           </a>
 
-          <nav aria-label="Primary" className="hidden lg:block">
-            <ul className="flex items-center gap-1">
-              {NAV.map((item) => (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    onClick={(e) => onAnchor(e, item.href)}
-                    className="inline-flex min-h-11 items-center rounded-full px-4 text-[14px] text-on-dark-muted transition-colors hover:text-ivory"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <div className="glass flex h-[60px] items-center gap-1 rounded-full pr-2 pl-2 shadow-[0_10px_40px_-20px_rgb(0_0_0/0.8)] transition-[transform,background-color,border-color] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] group-data-[scrolled=true]/bar:scale-[0.965] group-data-[scrolled=true]/bar:border-[rgb(244_239_231/0.18)] group-data-[scrolled=true]/bar:bg-[rgb(10_11_15/0.72)] lg:pl-3">
+            <nav aria-label="Primary" className="hidden lg:block">
+              <ul className="flex items-center gap-1">
+                {NAV.map((item) => (
+                  <li key={item.href}>
+                    <a
+                      href={item.href}
+                      onClick={(e) => onAnchor(e, item.href)}
+                      className="inline-flex min-h-11 items-center rounded-full px-4 text-[14px] text-on-dark-muted transition-colors hover:text-ivory"
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-          <div className="flex items-center gap-1.5">
+            <span aria-hidden className="mx-1 hidden h-6 w-px bg-line-dark lg:block" />
+
             <a
-              href={LINKS.signIn}
-              className="hidden min-h-11 items-center px-3 text-[14px] text-on-dark-muted transition-colors hover:text-ivory sm:inline-flex"
+              href={links.employerLogin}
+              className="hidden min-h-11 items-center rounded-full px-4 text-[14px] text-on-dark-muted ring-1 ring-line-dark transition-colors hover:text-ivory hover:ring-ivory/40 sm:inline-flex"
             >
-              Sign in
+              Employer login
             </a>
-            <a href={LINKS.hiring} className="btn btn-primary hidden !min-h-11 !px-5 !text-[14px] sm:inline-flex">
+            <a
+              href={SECTIONS.getStarted}
+              onClick={(e) => onAnchor(e, SECTIONS.getStarted)}
+              className="btn btn-primary hidden !min-h-11 !px-5 !text-[14px] sm:ml-1 sm:inline-flex"
+            >
               Get started
             </a>
             <button
@@ -216,7 +229,7 @@ export function SiteHeader() {
         </p>
         <nav aria-label="Mobile" className="relative">
           <ul className="flex flex-col gap-1">
-            {[...NAV, { label: "Sign in", href: LINKS.signIn }].map((item) => (
+            {[...NAV, { label: "Get started", href: SECTIONS.getStarted }, { label: "Employer login", href: links.employerLogin }].map((item) => (
               <li key={item.label}>
                 <a
                   href={item.href}
@@ -230,14 +243,14 @@ export function SiteHeader() {
           </ul>
         </nav>
         <div className="relative mt-auto flex flex-col gap-3">
-          <a data-menu-meta href={LINKS.hiring} className="btn btn-primary w-full">
+          <a data-menu-meta href={links.employerSignup} className="btn btn-primary w-full">
             I&rsquo;m hiring <ArrowUpRight className="btn-arrow size-4" aria-hidden />
           </a>
-          <a data-menu-meta href={LINKS.findJob} className="btn btn-ghost w-full">
+          <CandidateLink data-menu-meta links={links} className="btn btn-ghost w-full">
             Find a job
-          </a>
+          </CandidateLink>
           <p data-menu-meta className="mt-3 font-mono text-[12px] text-on-dark-faint">
-            {LINKS.email}
+            {STATIC_LINKS.email}
           </p>
         </div>
         <button type="button" onClick={close} className="sr-only focus:not-sr-only">

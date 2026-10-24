@@ -1,13 +1,14 @@
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { CandidateLink } from "@/components/links/candidate-link";
 import { Magnetic } from "@/components/ui/magnetic";
 import { ScrollWords } from "@/components/ui/scroll-words";
-import { LINKS } from "@/lib/links";
-import type { Job } from "@/lib/types";
+import type { Job, LandingLinks } from "@/lib/types";
 
 import { JobRow } from "./job-row";
 import { JobsBoard } from "./jobs-board";
+import { JOBS_PAGE } from "./page-size";
 
 function JobsShell({ count, children }: { count: ReactNode; children: ReactNode }) {
   return (
@@ -39,83 +40,79 @@ function JobsShell({ count, children }: { count: ReactNode; children: ReactNode 
   );
 }
 
-export function JobsSection({ jobs }: { jobs: Job[] }) {
+/**
+ * The sample job cards an admin publishes. Illustrative listings, labelled as
+ * such; Apply leads into candidate onboarding. With none published the section
+ * keeps its heading (so the Jobs link still lands somewhere) and says roles
+ * are coming.
+ */
+export function JobsSection({ jobs, links }: { jobs: Job[]; links: LandingLinks }) {
   const positions = jobs.reduce((n, j) => n + j.positions, 0);
   return (
     <JobsShell
       count={
-        <span>
-          <strong className="font-mono font-medium">{jobs.length}</strong> roles live · <span className="font-mono">{positions}</span> positions
-        </span>
+        jobs.length === 0 ? (
+          <span>New roles soon</span>
+        ) : (
+          <span>
+            <strong className="font-mono font-medium">{jobs.length}</strong> sample roles · <span className="font-mono">{positions}</span> positions
+          </span>
+        )
       }
     >
       {jobs.length === 0 ? (
         <div className="mt-12 rounded-[28px] border border-dashed border-line-dark px-6 py-16 text-center">
-          <p className="display text-[28px]">No live roles right now.</p>
-          <p className="mt-2 text-on-dark-muted">New vacancies land here first. Check back after tonight&rsquo;s service.</p>
+          <p className="display text-[28px]">New roles are posted here soon.</p>
+          <p className="mt-2 text-on-dark-muted">Join Staffkey now and hotels can see you&rsquo;re ready the moment they hire.</p>
+          <div className="mt-8 flex justify-center">
+            <Magnetic>
+              <CandidateLink links={links} className="btn btn-ghost">
+                Find a job <ArrowUpRight className="btn-arrow size-4" aria-hidden />
+              </CandidateLink>
+            </Magnetic>
+          </div>
         </div>
       ) : (
-        <JobsBoard departments={jobs.map((j) => j.department)}>
-          {jobs.map((job) => (
-            <li key={job.id} data-job data-dept={job.department} data-flip-id={job.id}>
-              <JobRow job={job} />
-            </li>
-          ))}
-        </JobsBoard>
-      )}
-
-      {jobs.length > 0 && (
-        <div className="mt-10 flex justify-center lg:mt-14">
-          <Magnetic>
-            <a href={LINKS.allJobs} className="btn btn-ghost">
-              View all jobs <ArrowRight className="btn-arrow size-4" aria-hidden />
-            </a>
-          </Magnetic>
-        </div>
+        <>
+          <JobsBoard departments={jobs.map((j) => j.department)}>
+            {jobs.map((job, index) => (
+              // Rows past the first page start hidden on the server too, so nothing jumps when the board takes over.
+              <li key={job.id} data-job data-dept={job.department} data-flip-id={job.id} hidden={index >= JOBS_PAGE}>
+                <JobRow job={job} links={links} />
+              </li>
+            ))}
+          </JobsBoard>
+          <p className="mt-8 text-center font-mono text-[12px] text-on-dark-faint">
+            Sample listings, shown to illustrate the roles hotels hire for on Staffkey. Apply to join and get your Staffkey ID.
+          </p>
+        </>
       )}
 
       {/* phones: a quiet sticky shortcut while the list is on screen */}
       <div className="pointer-events-none sticky bottom-[max(12px,env(safe-area-inset-bottom))] z-30 mt-8 flex justify-center lg:hidden">
-        <a href={LINKS.findJob} className="glass pointer-events-auto inline-flex min-h-12 items-center gap-3 rounded-full py-1.5 pr-1.5 pl-5 text-[14px] shadow-[0_20px_40px_-12px_rgb(0_0_0/0.8)]">
+        <CandidateLink
+          links={links}
+          className="glass pointer-events-auto inline-flex min-h-12 items-center gap-3 rounded-full py-1.5 pr-1.5 pl-5 text-[14px] shadow-[0_20px_40px_-12px_rgb(0_0_0/0.8)]"
+        >
           Apply in two minutes
           <span className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-blue px-4 font-medium text-white">
             Find a job <ArrowUpRight className="size-4" aria-hidden />
           </span>
-        </a>
+        </CandidateLink>
       </div>
 
-      <CtaBand />
+      <CtaBand links={links} />
     </JobsShell>
   );
 }
 
-export function JobsSkeleton() {
-  return (
-    <JobsShell count={<span>Loading roles…</span>}>
-      <div aria-hidden className="mt-10 flex gap-2 lg:mt-14">
-        {Array.from({ length: 5 }, (_, i) => (
-          <div key={i} className="h-11 w-32 animate-pulse rounded-full bg-white/[0.06]" />
-        ))}
-      </div>
-      <div aria-hidden className="mt-8 flex flex-col gap-3 lg:mt-10">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="h-[220px] animate-pulse rounded-[24px] bg-white/[0.04] lg:h-[112px] lg:rounded-none" />
-        ))}
-      </div>
-      <p className="sr-only" role="status">
-        Loading jobs
-      </p>
-    </JobsShell>
-  );
-}
-
-function CtaBand() {
+function CtaBand({ links }: { links: LandingLinks }) {
   const doors = [
     {
       eyebrow: "For employers",
       title: "I’m hiring",
       body: "Browse verified candidates by department and role. Profiles are released to you the moment you need them.",
-      href: LINKS.hiring,
+      href: links.employerSignup,
       cta: "Start hiring",
       primary: true,
     },
@@ -123,7 +120,7 @@ function CtaBand() {
       eyebrow: "For candidates",
       title: "I’m looking for work",
       body: "Verify once and get a permanent Staffkey ID. Every hotel on Staffkey can see you’re ready.",
-      href: LINKS.findJob,
+      href: null,
       cta: "Find a job",
       primary: false,
     },
@@ -143,14 +140,12 @@ function CtaBand() {
       </p>
 
       <div className="mt-12 grid gap-4 lg:mt-16 lg:grid-cols-2 lg:gap-5">
-        {doors.map((d) => (
-          <a
-            key={d.title}
-            href={d.href}
-            className={`group/door relative flex min-h-[260px] flex-col overflow-clip rounded-[28px] p-7 transition-transform duration-500 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-1 sm:p-9 ${
-              d.primary ? "bg-blue text-white" : "bg-ivory text-ink"
-            }`}
-          >
+        {doors.map((d) => {
+          const className = `group/door relative flex min-h-[260px] flex-col overflow-clip rounded-[28px] p-7 transition-transform duration-500 ease-[cubic-bezier(.2,.8,.2,1)] hover:-translate-y-1 sm:p-9 ${
+            d.primary ? "bg-blue text-white" : "bg-ivory text-ink"
+          }`;
+          const inner = (
+          <>
             <span className={`eyebrow !text-[12px] ${d.primary ? "text-white/75" : "text-on-light-muted"}`}>{d.eyebrow}</span>
             <span className="display mt-4 text-[clamp(30px,3.2vw,44px)]">{d.title}</span>
             <span className={`mt-3 max-w-[30rem] text-[15px] leading-relaxed ${d.primary ? "text-white/85" : "text-on-light-muted"}`}>{d.body}</span>
@@ -164,8 +159,19 @@ function CtaBand() {
                 <ArrowUpRight className="size-5" aria-hidden />
               </span>
             </span>
-          </a>
-        ))}
+          </>
+          );
+          // The candidate door follows the device (store or download page on phones once set, candidate web otherwise).
+          return d.href ? (
+            <a key={d.title} href={d.href} className={className}>
+              {inner}
+            </a>
+          ) : (
+            <CandidateLink key={d.title} links={links} className={className}>
+              {inner}
+            </CandidateLink>
+          );
+        })}
       </div>
     </div>
   );

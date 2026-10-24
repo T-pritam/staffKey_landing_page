@@ -1,16 +1,19 @@
 import { ArrowUpRight } from "lucide-react";
 
+import { CandidateLink } from "@/components/links/candidate-link";
 import { EMPLOYMENT_LABEL, formatExperience, formatSalary } from "@/lib/format";
-import { LINKS } from "@/lib/links";
-import type { Job } from "@/lib/types";
+import type { Job, LandingLinks } from "@/lib/types";
 
 /**
- * One vacancy. A wide table-like row on desktop (blue wipe on hover, detail
- * line fades in), a stacked card on phones. The title link stretches over the
- * whole row, so the row is one tap target with one accessible name.
+ * One sample listing. A wide table-like row on desktop (blue wipe on hover,
+ * detail line fades in), a stacked card on phones. The title link stretches
+ * over the whole row, so the row is one tap target with one accessible name.
+ *
+ * These are illustrative roles an admin publishes, not vacancies: the row says
+ * so, and Apply leads into candidate onboarding rather than an application.
  */
-export function JobRow({ job }: { job: Job }) {
-  const type = job.employmentType ? EMPLOYMENT_LABEL[job.employmentType] : "Full-time";
+export function JobRow({ job, links }: { job: Job; links: LandingLinks }) {
+  const type = EMPLOYMENT_LABEL[job.employmentType] ?? "Full-time";
   const where = [job.propertyType, job.city].filter(Boolean).join(" · ");
   const positions = `${job.positions} ${job.positions === 1 ? "position" : "positions"}`;
 
@@ -22,18 +25,28 @@ export function JobRow({ job }: { job: Job }) {
       <div className="flex flex-col gap-5 lg:grid lg:min-h-[112px] lg:grid-cols-[minmax(0,1fr)_12rem_7rem_8rem_7rem_3rem] lg:items-center lg:gap-6">
         {/* title */}
         <div className="min-w-0">
-          <p className="eyebrow mb-2 flex items-center justify-between !text-[12px] text-on-dark-faint lg:hidden">
+          <p className="eyebrow mb-2 flex items-center justify-between gap-2 !text-[12px] text-on-dark-faint lg:hidden">
             <span>{job.department}</span>
-            <span className="rounded-full border border-line-dark px-2.5 py-1 tracking-[0.08em] text-on-dark-muted">{type}</span>
+            <span className="flex items-center gap-1.5">
+              <SampleTag />
+              <span className="rounded-full border border-line-dark px-2.5 py-1 tracking-[0.08em] text-on-dark-muted">{type}</span>
+            </span>
           </p>
           <h3 className="display text-[clamp(22px,2vw,28px)] leading-[1.05] tracking-[-0.015em]">
-            <a href={LINKS.apply(job.id)} className="after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:outline-none">
+            <CandidateLink
+              links={links}
+              aria-label={`${job.title}, sample listing. Join Staffkey to apply.`}
+              className="after:absolute after:inset-0 after:z-10 after:content-[''] focus-visible:outline-none"
+            >
               {job.title}
-            </a>
+            </CandidateLink>
           </h3>
-          <p className="mt-1.5 hidden text-[14px] text-on-dark-muted lg:block">
-            {job.department} · {positions}
-            <span className="job-detail"> · Verified profiles only, apply with your Staffkey ID</span>
+          <p className="mt-1.5 hidden items-center gap-2 text-[14px] text-on-dark-muted lg:flex">
+            <SampleTag />
+            <span>
+              {job.department} · {positions}
+              <span className="job-detail"> · Verified profiles only, apply with your Staffkey ID</span>
+            </span>
           </p>
         </div>
 
@@ -73,5 +86,13 @@ export function JobRow({ job }: { job: Job }) {
         </span>
       </div>
     </article>
+  );
+}
+
+function SampleTag() {
+  return (
+    <span className="rounded-full bg-champagne/15 px-2 py-0.5 font-mono text-[11px] tracking-[0.06em] text-champagne uppercase">
+      Sample
+    </span>
   );
 }

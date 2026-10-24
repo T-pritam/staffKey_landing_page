@@ -269,6 +269,22 @@ body {
   }
 }
 
+/* The hero's scroll cue: a slow nudge downward. Reduced motion stills it (rule below). */
+.scroll-cue-icon {
+  animation: scroll-cue 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes scroll-cue {
+  0%,
+  100% {
+    transform: translateY(-2px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+}
+
 /*
  * Hero entrance. CSS, not GSAP, so it starts at first paint rather than after
  * hydration, and always ends fully visible even if JS never runs.

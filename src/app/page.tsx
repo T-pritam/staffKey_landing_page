@@ -1,54 +1,55 @@
 import { Suspense } from "react";
 
-import { BrandsSection, BrandsSkeleton } from "@/components/brands/brands-section";
+import { BrandsSection } from "@/components/brands/brands-section";
 import { SiteFooter } from "@/components/footer/site-footer";
 import { SiteHeader } from "@/components/header/site-header";
 import { Hero } from "@/components/hero/hero";
-import { JobsSection, JobsSkeleton } from "@/components/jobs/jobs-section";
+import { JobsSection } from "@/components/jobs/jobs-section";
 import { SmoothScroll } from "@/components/motion/smooth-scroll";
 import { heroImage } from "@/data/hero-image";
-import { getBrands, getJobs, getLiveStats } from "@/lib/data";
-import { LINKS } from "@/lib/links";
-
-async function Brands() {
-  return <BrandsSection brands={await getBrands()} />;
-}
-
-async function Jobs() {
-  return <JobsSection jobs={await getJobs()} />;
-}
+import { getLandingContent, toBrands, toJobs, toMarks, toStats } from "@/lib/data";
+import { STATIC_LINKS } from "@/lib/links";
 
 const ORGANIZATION = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Staffkey",
   description: "Hospitality recruitment for Indian hotels and restaurants.",
-  email: LINKS.email,
+  email: STATIC_LINKS.email,
   logo: "/brand/staffkey-black.svg",
   areaServed: "IN",
 };
 
-export default async function Home() {
-  // Outside Suspense on purpose: the hero is the LCP, so it must be in the first
-  // HTML paint, not streamed in behind a fallback. getLiveStats() is cached, so
-  // this doesn't make the page dynamic.
-  const stats = await getLiveStats();
-
+/**
+ * The page reads one cached copy of the admin content (src/lib/data.ts). It is
+ * filled at build time and refreshed in the background, so the prerendered
+ * HTML already carries it and the fallback below is only seen while a
+ * development server fetches it for the first time.
+ */
+export default function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION) }} />
       <SmoothScroll />
-      <SiteHeader />
+      <Suspense fallback={<div className="min-h-[100svh] bg-ink" aria-hidden />}>
+        <LandingPage />
+      </Suspense>
+    </>
+  );
+}
+
+async function LandingPage() {
+  const content = await getLandingContent();
+  const { links } = content;
+  return (
+    <>
+      <SiteHeader links={links} />
       <main id="main">
-        <Hero image={heroImage} stats={stats} />
-        <Suspense fallback={<BrandsSkeleton />}>
-          <Brands />
-        </Suspense>
-        <Suspense fallback={<JobsSkeleton />}>
-          <Jobs />
-        </Suspense>
+        <Hero image={heroImage} stats={toStats(content)} links={links} />
+        <BrandsSection marks={toMarks(content)} brands={toBrands(content)} />
+        <JobsSection jobs={toJobs(content)} links={links} />
       </main>
-      <SiteFooter />
+      <SiteFooter links={links} />
     </>
   );
 }

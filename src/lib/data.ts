@@ -1,39 +1,92 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
-import { SAMPLE_BRANDS } from "@/data/brands";
-import { SAMPLE_JOBS } from "@/data/jobs";
-import type { Brand, Job, LiveStats } from "@/lib/types";
+import { APP_URL, FALLBACK_LINKS } from "@/lib/links";
+import type { Brand, Job, LandingContent, LiveStats, Mark } from "@/lib/types";
 
 /**
- * The landing page's only data sources. Each returns sample data today; to go
- * live, replace the body with a fetch to the Staffkey API and keep the return
- * type. Components take the result as props, so nothing else changes.
+ * The page's one data source: GET {STAFFKEY_APP_URL}/api/v1/public/landing,
+ * which serves what an admin publishes under /admin/landing.
  *
- *   const res = await fetch(`${process.env.STAFFKEY_API_URL}/public/live-jobs`);
- *   const page: { vacancies: Job[] } = await res.json();
- *   return page.vacancies;
+ * How fresh it is:
+ *   - Every admin save calls POST /api/revalidate here (src/app/api/revalidate),
+ *     which drops the cached copy, so the next visitor sees the change.
+ *   - If that call is missed, the copy refreshes on its own every five minutes.
+ *
+ * If the API cannot be reached the page still renders: the hero numbers keep
+ * their last known defaults, the buttons point at the app's own pages, and the
+ * jobs, cards and logos sections show their empty states.
  */
 
-export async function getJobs(): Promise<Job[]> {
+export const LANDING_CACHE_TAG = "landing";
+
+const EMPTY: LandingContent = {
+  counters: { verifiedCandidates: 12400, partnerProperties: 380, cities: 24, availableNow: 1284 },
+  links: FALLBACK_LINKS,
+  trustedLogos: [],
+  propertyCards: [],
+  jobs: [],
+};
+
+const TIMEOUT_MS = 5_000;
+
+export async function getLandingContent(): Promise<LandingContent> {
   "use cache";
-  cacheLife("minutes");
-  return SAMPLE_JOBS; // later: GET /public/live-jobs
+  cacheTag(LANDING_CACHE_TAG);
+  cacheLife({ stale: 60, revalidate: 300, expire: 86_400 });
+
+  try {
+    const response = await fetch(`${APP_URL}/api/v1/public/landing`, {
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: { accept: "application/json" },
+    });
+    if (!response.ok) return EMPTY;
+    const body = (await response.json()) as Partial<LandingContent>;
+    return {
+      counters: { ...EMPTY.counters, ...body.counters },
+      links: { ...FALLBACK_LINKS, ...body.links },
+      trustedLogos: Array.isArray(body.trustedLogos) ? body.trustedLogos : [],
+      propertyCards: Array.isArray(body.propertyCards) ? body.propertyCards : [],
+      jobs: Array.isArray(body.jobs) ? body.jobs : [],
+    };
+  } catch {
+    return EMPTY;
+  }
 }
 
-export async function getBrands(): Promise<Brand[]> {
-  "use cache";
-  cacheLife("hours");
-  return SAMPLE_BRANDS; // later: GET /public/brands
+// --- Shaping the payload for the components ----------------------------------
+
+export function toStats(content: LandingContent): LiveStats {
+  return content.counters;
 }
 
-/** The hero's live numbers. Placeholder values until there is an endpoint. */
-export async function getLiveStats(): Promise<LiveStats> {
-  "use cache";
-  cacheLife("minutes");
-  return {
-    availableNow: 1284,
-    verifiedCandidates: 12400,
-    partnerProperties: 380,
-    cities: 24,
-  };
+export function toMarks(content: LandingContent): Mark[] {
+  return content.trustedLogos.map((logo) => ({ id: logo.id, name: logo.name, logoSrc: logo.logoUrl ?? undefined }));
+}
+
+export function toBrands(content: LandingContent): Brand[] {
+  return content.propertyCards.map((card) => ({
+    id: card.id,
+    name: card.name,
+    logoSrc: card.logoUrl ?? undefined,
+    propertyType: card.propertyType?.name ?? "",
+    propertyTypeSlug: card.propertyType?.slug ?? null,
+    city: card.city,
+    openRoles: card.openings,
+    quote: card.description ?? undefined,
+  }));
+}
+
+export function toJobs(content: LandingContent): Job[] {
+  return content.jobs.map((job) => ({
+    id: job.id,
+    role: job.role,
+    title: job.title,
+    department: job.department ?? "Other",
+    experience: job.experience,
+    city: job.city,
+    positions: job.positions,
+    propertyType: job.propertyType?.name ?? null,
+    employmentType: job.employmentType,
+    salary: job.salary ?? undefined,
+  }));
 }

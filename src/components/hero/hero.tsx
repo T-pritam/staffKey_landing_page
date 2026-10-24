@@ -1,25 +1,37 @@
 import { ArrowUpRight } from "lucide-react";
 import { getImageProps } from "next/image";
 import { preload } from "react-dom";
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 
 import { CountUp } from "@/components/ui/count-up";
 import { Magnetic } from "@/components/ui/magnetic";
-import { SplitWords } from "@/components/ui/split-words";
+import { SplitWords, type SplitPart } from "@/components/ui/split-words";
 import type { HeroImage } from "@/data/hero-image";
-import { formatNumber } from "@/lib/format";
-import { LINKS } from "@/lib/links";
-import type { LiveStats } from "@/lib/types";
+import { CandidateLink } from "@/components/links/candidate-link";
+import { SECTIONS } from "@/lib/links";
+import type { LandingLinks, LiveStats } from "@/lib/types";
 
+import { HeadlineRotator } from "./headline-rotator";
 import { HeroMotion } from "./hero-motion";
 import { RoleTicker } from "./role-ticker";
+import { ScrollCue } from "./scroll-cue";
+
+/** The hero rotates between these. `lead` is the first line, `rest` the second. */
+const HEADLINES: { label: string; lead: SplitPart[]; rest: string }[] = [
+  { label: "The right hands for every hotel.", lead: ["The right", { em: "hands" }], rest: "for every hotel." },
+  {
+    label: "The right place for every hospitality professional.",
+    lead: ["The right", { em: "place" }],
+    rest: "for every hospitality professional.",
+  },
+];
 
 const ROLES = ["Sous Chefs", "Captains", "Front Office", "Housekeeping", "Commis", "Stewards", "Bartenders"];
 
 // Phones and portrait tablets get the portrait crop.
 const PORTRAIT = "(max-width: 1023px) and (orientation: portrait)";
 
-export function Hero({ image, stats }: { image: HeroImage; stats: LiveStats }) {
+export function Hero({ image, stats, links }: { image: HeroImage; stats: LiveStats; links: LandingLinks }) {
   const common = { alt: image.alt, sizes: "100vw", quality: 80 } as const;
   const {
     props: { srcSet: desktopSet, ...img },
@@ -92,7 +104,7 @@ export function Hero({ image, stats }: { image: HeroImage; stats: LiveStats }) {
         {/* ---- the words ---- */}
         <div
           data-hero-content
-          className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col justify-between gap-10 px-[var(--gutter)] pt-[calc(108px+env(safe-area-inset-top))] pb-[calc(56px+env(safe-area-inset-bottom))] lg:justify-end lg:pt-[140px] lg:pb-8"
+          className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 flex-col justify-between gap-10 px-[var(--gutter)] pt-[calc(108px+env(safe-area-inset-top))] pb-[calc(100px+env(safe-area-inset-bottom))] lg:justify-end lg:pt-[140px] lg:pb-8"
         >
           <div className="flex flex-col items-start">
             <p
@@ -101,17 +113,25 @@ export function Hero({ image, stats }: { image: HeroImage; stats: LiveStats }) {
             >
               <span className="pulse-dot" aria-hidden />
               <span>
-                <strong className="font-mono font-medium">{formatNumber(stats.availableNow)}</strong> verified candidates available now
+                <CountUp value={stats.availableNow} delay={0.6} start="top bottom" defer={false} className="font-mono font-medium" /> verified
+                candidates available now
               </span>
             </p>
 
-            <h1 id="hero-title" className="hero-rise display max-w-[14ch] text-[clamp(44px,9vw,104px)]">
-              <span className="block">
-                <SplitWords parts={["The right", { em: "hands" }]} />
-              </span>
-              <span className="block">
-                <SplitWords parts="for every hotel." start={3} />
-              </span>
+            <h1 id="hero-title" className="hero-rise display max-w-[14ch] text-[clamp(44px,9vw,104px)] lg:max-w-[21ch]">
+              <HeadlineRotator
+                label={HEADLINES.map((h) => h.label).join(" ")}
+                headlines={HEADLINES.map((h) => (
+                  <Fragment key={h.label}>
+                    <span className="block">
+                      <SplitWords parts={h.lead} />
+                    </span>
+                    <span className="block">
+                      <SplitWords parts={h.rest} start={3} />
+                    </span>
+                  </Fragment>
+                ))}
+              />
             </h1>
 
             <div className="mt-6 grid w-full gap-6 lg:mt-10 lg:grid-cols-[minmax(0,30rem)_1fr] lg:items-end lg:gap-16">
@@ -127,14 +147,14 @@ export function Hero({ image, stats }: { image: HeroImage; stats: LiveStats }) {
 
               <div data-hero-fade className="hero-fade flex w-full flex-col gap-3 sm:w-auto sm:flex-row lg:justify-self-end" style={{ "--d": 2 } as CSSProperties}>
                 <Magnetic className="w-full sm:w-auto">
-                  <a href={LINKS.hiring} className="btn btn-primary w-full sm:w-auto">
+                  <a href={links.employerSignup} className="btn btn-primary w-full sm:w-auto">
                     I&rsquo;m hiring <ArrowUpRight className="btn-arrow size-4" aria-hidden />
                   </a>
                 </Magnetic>
                 <Magnetic className="w-full sm:w-auto">
-                  <a href={LINKS.findJob} className="btn btn-ghost w-full sm:w-auto">
+                  <CandidateLink links={links} className="btn btn-ghost w-full sm:w-auto">
                     Find a job
-                  </a>
+                  </CandidateLink>
                 </Magnetic>
               </div>
             </div>
@@ -164,6 +184,10 @@ export function Hero({ image, stats }: { image: HeroImage; stats: LiveStats }) {
               ))}
             </dl>
           </div>
+        </div>
+
+        <div data-hero-fade className="hero-fade absolute inset-x-0 bottom-[calc(44px+env(safe-area-inset-bottom))] z-10 flex justify-center lg:bottom-[6px]" style={{ "--d": 4 } as CSSProperties}>
+          <ScrollCue target={SECTIONS.brands} label="Scroll to the brands" />
         </div>
       </section>
     </HeroMotion>

@@ -1,10 +1,10 @@
-import type { Brand } from "@/lib/types";
+import type { Mark } from "@/lib/types";
 
 import { MarqueeMotion } from "./marquee";
 import { Wordmark } from "./wordmark";
 
 /** Server-rendered marquee markup; MarqueeMotion only adds the movement. */
-export function BrandMarquee({ brands }: { brands: Brand[] }) {
+export function BrandMarquee({ brands }: { brands: Mark[] }) {
   const rows = [brands, [...brands].reverse()];
   return (
     <MarqueeMotion>

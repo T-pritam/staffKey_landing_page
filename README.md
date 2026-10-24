@@ -12,14 +12,33 @@ npm run dev          # http://localhost:3000
 npm run build && npm start   # production build
 ```
 
-Optional environment variables:
+Environment variables:
 
 | Variable | What it does | Default |
 |---|---|---|
-| `NEXT_PUBLIC_APP_URL` | Origin of the Staffkey app. Sign-in, sign-up and Apply links point here. | `""` (same origin) |
+| `STAFFKEY_APP_URL` | Origin of the Staffkey app. The page's content is read from it, and its buttons point into it. | `https://staging.staffkey.in` |
+| `LANDING_REVALIDATE_SECRET` | Shared secret for `POST /api/revalidate`. Must equal the app's `LANDING_REVALIDATE_SECRET`. Unset, the endpoint refuses every call and the page only refreshes on its five-minute timer. | unset |
 | `NEXT_PUBLIC_SITE_URL` | This site's public URL, used for Open Graph links. | `http://localhost:3000` |
 
-## Swap in real content
+## Content (edited in the Staffkey admin)
+
+Everything except the hero photo and the fixed copy is edited by a Staffkey admin under **/admin/landing** in the app, and read from `GET {STAFFKEY_APP_URL}/api/v1/public/landing`:
+
+| On the page | Admin tab |
+|---|---|
+| Hero counters (verified candidates, partner properties, cities, available now) | Hero numbers & links |
+| Where every button goes (employer login, employer sign-up, candidate web, app download) | Hero numbers & links |
+| Scrolling "Trusted by" logos (transparent PNG/WebP, or the name as a wordmark) | Trusted-by logos |
+| Property cards (name, type, city, description, openings, logo) | Property cards |
+| Job cards (sample listings, labelled as samples) | Sample jobs |
+
+Only published entries appear. With no sample jobs published the jobs section shows its empty state; with no logos or cards those parts are left out.
+
+**How fast a change shows.** `src/lib/data.ts` caches the content under the tag `landing` and refreshes it every five minutes on its own. Each admin save also calls `POST /api/revalidate` here, which expires the cache, so the next visitor sees the change, normally within seconds. If that call fails, the five-minute refresh still picks the change up. If the API cannot be reached at all, the page renders with default counters, links to the app's own pages and empty sections.
+
+The response shape is in `src/lib/types.ts`, mirroring `lib/landing-content/shared.ts` in the staffkey repo. That file is the contract.
+
+**Phones.** Candidate buttons (Find a job, Apply, Apply in two minutes, the candidate card) open the Play Store on Android or the App Store on iOS when those links are set, then the download page, and candidate web otherwise. Desktop always opens candidate web. Today no store or download link is set, so every device goes to candidate web.
 
 ### The hero photo
 
@@ -29,25 +48,9 @@ Edit `src/data/hero-image.ts`. It holds the desktop `src`, the portrait `mobileS
 - Keep the long edge about 2560px and the file under about 300 KB. Next.js serves AVIF/WebP at the right size for each screen.
 - The blur placeholder is a 24px WebP as a base64 data URL. Any tiny image works.
 
-### Jobs and brands (the API swap)
-
-All page data comes from `src/lib/data.ts`:
-
-```ts
-getJobs():      Promise<Job[]>    // sample data now; later GET /public/live-jobs
-getBrands():    Promise<Brand[]>  // sample data now; later GET /public/brands
-getLiveStats(): Promise<LiveStats> // hero numbers
-```
-
-Replace each function body with a `fetch` to the Staffkey API and keep the return type. Nothing else needs to change: components take the data as props, the brands and jobs sections already have skeleton loaders (React Suspense) and an empty state.
-
-The `Job` type mirrors the app's `LiveJob` (`lib/live-jobs/shared.ts`) plus display fields (`title`, `department`, `employmentType`, `salary`). Sample rows live in `src/data/jobs.ts` and `src/data/brands.ts`.
-
-Brands are **fictional** on purpose. Real hotel names and logos need written permission. When you have them, set `logoSrc` on a brand and the logo replaces its typographic wordmark.
-
 ### Links into the app
 
-`src/lib/links.ts`. Apply uses the same shape as the app's `signupPathFor()`: `/login/candidate?apply=<vacancyId>`.
+`src/lib/links.ts` holds the fallbacks used when the content cannot be fetched, the fixed pages (privacy, terms) and the in-page section ids (`#brands`, `#live-jobs`, `#for-employers`).
 
 ## Brand assets
 
