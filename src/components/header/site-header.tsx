@@ -163,7 +163,7 @@ export function SiteHeader({ links }: { links: LandingLinks }) {
             className="flex min-h-[60px] items-center rounded-full px-1 transition-[background-color,padding,transform] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] group-data-[scrolled=true]/bar:glass group-data-[scrolled=true]/bar:scale-[0.94] group-data-[scrolled=true]/bar:bg-[rgb(10_11_15/0.72)] group-data-[scrolled=true]/bar:px-5"
             aria-label="Staffkey, back to top"
           >
-            <Logo tone="white" title={null} className="h-[28px] w-auto sm:h-[32px]" />
+            <Logo tone="white" title={null} className="h-[36px] w-auto sm:h-[44px]" />
           </a>
 
           <div className="glass flex h-[60px] items-center gap-1 rounded-full pr-2 pl-2 shadow-[0_10px_40px_-20px_rgb(0_0_0/0.8)] transition-[transform,background-color,border-color] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] group-data-[scrolled=true]/bar:scale-[0.965] group-data-[scrolled=true]/bar:border-[rgb(244_239_231/0.18)] group-data-[scrolled=true]/bar:bg-[rgb(10_11_15/0.72)] lg:pl-3">

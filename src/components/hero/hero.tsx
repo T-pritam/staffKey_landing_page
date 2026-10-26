@@ -123,7 +123,7 @@ export function Hero({ image, stats, links }: { image: HeroImage; stats: LiveSta
               </p>
             )}
 
-            <h1 id="hero-title" className="hero-rise display max-w-[14ch] text-[clamp(44px,9vw,104px)] lg:max-w-[21ch]">
+            <h1 id="hero-title" className="hero-rise display max-w-[14ch] text-[clamp(38px,7.5vw,88px)] lg:max-w-[21ch]">
               <HeadlineRotator
                 label={HEADLINES.map((h) => h.label).join(" ")}
                 headlines={HEADLINES.map((h) => (
@@ -168,14 +168,10 @@ export function Hero({ image, stats, links }: { image: HeroImage; stats: LiveSta
           <div
             data-hero-fade
             style={{ "--d": 3 } as CSSProperties}
-            className="hero-fade grid w-full gap-4 border-t border-line-dark pt-5 lg:mt-14 lg:grid-cols-[1fr_auto] lg:items-end"
+            className="hero-fade grid w-full gap-4 border-t border-line-dark pt-5 lg:mt-14 lg:justify-items-end"
           >
-            <p className="order-2 hidden items-center gap-2 font-mono text-[12px] tracking-wide text-on-dark-faint lg:order-1 lg:flex">
-              <span aria-hidden className="inline-block size-1.5 rounded-full bg-champagne" />
-              {image.caption}
-            </p>
             {counters.length > 0 && (
-              <dl className="order-1 grid grid-cols-3 gap-3 lg:order-2 lg:flex lg:gap-14">
+              <dl className="grid grid-cols-3 gap-3 lg:flex lg:gap-14">
                 {[
                   { label: "Verified candidates", value: stats.verifiedCandidates, suffix: "+" },
                   { label: "Partner properties", value: stats.partnerProperties },
